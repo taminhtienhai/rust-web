@@ -10,7 +10,6 @@ use serde::{
 };
 use serde_json;
 use env_logger::Env;
-use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 
 #[derive(Serialize, Deserialize, Clone)]
 struct Info {
@@ -37,11 +36,6 @@ async fn manual_hello() -> impl Responder {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(Env::default().default_filter_or("info"));
-    let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
-    builder
-        .set_private_key_file("key.pem", SslFiletype::PEM)
-        .unwrap();
-    builder.set_certificate_chain_file("cert.pem").unwrap();
 
     HttpServer::new(|| {
         App::new()
@@ -51,7 +45,7 @@ async fn main() -> std::io::Result<()> {
             .service(echo)
             .route("/hey", web::get().to(manual_hello))
     })
-    .bind_openssl("127.0.0.1:8080", builder)?
+    .bind(("127.0.0.1", 8080))?
     .run()
     .await
 }
